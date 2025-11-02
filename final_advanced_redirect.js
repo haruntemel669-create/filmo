@@ -258,11 +258,7 @@
             } else {
                 // Regular traffic
                 trafficType = 'direct';
-                redirectUrl = targetDomain + '?s=' + paramValue + 
-                            '&ref=' + shuffledReferrers[0] + 
-                            '&d=' + currentDomain +
-                            '&t=' + trafficType +
-                            '&conf=' + botDetection.confidence;
+                redirectUrl = targetDomain + '/' + paramValue;
             }
             
             // Perform redirect
